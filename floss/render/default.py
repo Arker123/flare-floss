@@ -17,6 +17,7 @@ import floss.logging_
 from floss.render import Verbosity
 from floss.results import AddressType, StackString, TightString, DecodedString, ResultDocument, StringEncoding
 from floss.render.sanitize import sanitize
+from floss.language.go.extract import calculate_coverage
 
 MIN_WIDTH_LEFT_COL = 22
 MIN_WIDTH_RIGHT_COL = 82
@@ -44,7 +45,7 @@ def width(s: str, character_count: int) -> str:
         return s
 
 
-def render_meta(results: ResultDocument, console, verbose):
+def render_meta(results: ResultDocument, console, verbose, language):
     rows: List[Tuple[str, str]] = list()
     if verbose == Verbosity.DEFAULT:
         rows.append((width("file path", MIN_WIDTH_LEFT_COL), width(results.metadata.file_path, MIN_WIDTH_RIGHT_COL)))
@@ -63,6 +64,12 @@ def render_meta(results: ResultDocument, console, verbose):
     rows.extend(render_string_type_rows(results))
     if verbose > Verbosity.DEFAULT:
         rows.extend(render_function_analysis_rows(results))
+
+        if language == Language.GO:
+            rows.append(("language", "GO"))
+            rows.append(("  version", results.metadata.language_version))   
+            # Display percentage of strings extracted
+            rows.append(("  coverage", calculate_coverage(results.strings.enhanced_static_strings, results.strings.static_strings)))
 
     table = Table(box=box.ASCII2, show_header=False)
     for row in rows:
@@ -299,12 +306,12 @@ def render(results, verbose, disable_headers, color, language=None):
         else:
             colored_str = heading_style(f"FLARE FLOSS RESULTS (version {results.metadata.version})\n")
             console.print(colored_str)
-        render_meta(results, console, verbose)
+        render_meta(results, console, verbose, language)
         console.print("\n")
 
     if results.analysis.enable_static_strings:
         if language == Language.GO:
-            render_go_staticstrings(results.strings.static_strings, console, verbose, disable_headers)
+            render_go_staticstrings(results.strings.enhanced_static_strings, console, verbose, disable_headers)
         else:
             render_staticstrings(results.strings.static_strings, console, verbose, disable_headers)
 

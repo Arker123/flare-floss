@@ -173,6 +173,7 @@ class Metadata:
     imagebase: int = 0
     min_length: int = 0
     runtime: Runtime = field(default_factory=Runtime)
+    language_version: str = None
 
 
 @dataclass
@@ -181,6 +182,7 @@ class Strings:
     tight_strings: List[TightString] = field(default_factory=list)
     decoded_strings: List[DecodedString] = field(default_factory=list)
     static_strings: List[StaticString] = field(default_factory=list)
+    enhanced_static_strings: List[StaticString] = field(default_factory=list)
 
 
 @dataclass

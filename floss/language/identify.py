@@ -24,28 +24,32 @@ def identify_language(sample: str, static_strings: Iterable[StaticString]) -> La
     """
     Identify the language of the binary given
     """
-    if is_rust_bin(static_strings):
+    is_rust, version = is_rust_bin(static_strings)
+    if is_rust:
         logger.warning("Rust Binary Detected, Rust binaries are not supported yet. Results may be inaccurate.")
         logger.warning("Rust: Proceeding with analysis may take a long time.")
-        return Language.RUST
+        return Language.RUST, version
 
     # Open the file as PE for further checks
     try:
         pe = pefile.PE(sample)
     except pefile.PEFormatError as err:
         logger.debug(f"NOT valid PE header: {err}")
-        return Language.UNKNOWN
+        return Language.UNKNOWN, None
 
-    if is_go_bin(pe):
-        logger.warning("Go Binary Detected, Go binaries are not supported yet. Results may be inaccurate.")
+    is_go, version = is_go_bin(pe)
+    
+    if is_go:
         logger.warning("Go: Proceeding with analysis may take a long time.")
-        return Language.GO
-    elif is_dotnet_bin(pe):
+        return Language.GO, version
+    
+    is_dotnet, version = is_dotnet_bin(pe)
+    if is_dotnet:
         logger.warning(".net Binary Detected, .net binaries are not supported yet. Results may be inaccurate.")
         logger.warning(".net: Deobfuscation of strings from .net binaries is not supported yet.")
-        return Language.DOTNET
+        return Language.DOTNET, version
     else:
-        return Language.UNKNOWN
+        return Language.UNKNOWN, None
 
 
 def is_rust_bin(static_strings: Iterable[StaticString]) -> bool:
@@ -68,12 +72,12 @@ def is_rust_bin(static_strings: Iterable[StaticString]) -> bool:
         if matches and matches["hash"] in rust_commit_hash.keys():
             version = rust_commit_hash[matches["hash"]]
             logger.warning("Rust Binary found with version: %s", version)
-            return True
+            return (True, version)
         if regex_version.search(string):
             logger.warning("Rust Binary found with version: %s", string)
-            return True
+            return (True, string)
 
-    return False
+    return (False, None)
 
 
 def is_go_bin(pe: pefile.PE) -> bool:
@@ -106,8 +110,7 @@ def is_go_bin(pe: pefile.PE) -> bool:
                 if magic in section_data:
                     pclntab_va = section_data.index(magic) + section_va
                     if verify_pclntab(section, pclntab_va):
-                        logger.warning("Go binary found with version %s", get_go_version(magic))
-                        return True
+                        return (True, get_go_version(magic))
 
     # if not found, search in all the available sections
 
@@ -121,8 +124,8 @@ def is_go_bin(pe: pefile.PE) -> bool:
                 if verify_pclntab(section, pclntab_va):
                     # just for testing
                     logger.warning("Go binary found with version %s", get_go_version(magic))
-                    return True
-    return False
+                    return (True, get_go_version(magic))
+    return (False, None)
 
 
 def get_go_version(magic):
@@ -169,6 +172,7 @@ def is_dotnet_bin(pe: pefile.PE) -> bool:
         directory_index = pefile.DIRECTORY_ENTRY["IMAGE_DIRECTORY_ENTRY_COM_DESCRIPTOR"]
         dir_entry = pe.OPTIONAL_HEADER.DATA_DIRECTORY[directory_index]
     except IndexError:
-        return False
+        return (False, None)
 
-    return dir_entry.Size != 0 and dir_entry.VirtualAddress != 0
+    # TODO: Include analysis for .NET version
+    return (dir_entry.Size != 0 and dir_entry.VirtualAddress != 0, 0)

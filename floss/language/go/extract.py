@@ -17,6 +17,28 @@ logger = logging.getLogger(__name__)
 
 MIN_STR_LEN = 6
 
+def calculate_coverage(enhancedStaticStrings: List[StaticString], static_strings: List[StaticString]) -> float:
+        
+        all_static_string_list = []
+
+        for string_obj in static_strings:
+            all_static_string_list.append(string_obj.string)
+
+        extracted_strings = []
+        total_chars_covered = 0
+
+        for j in enhancedStaticStrings:
+            k = j.string
+            for string in all_static_string_list:
+                if k in string:
+                    extracted_strings.append(string)
+                    total_chars_covered += len(string)
+                    break
+
+        ct = len(extracted_strings) 
+
+        return ((ct) * 100 / len(all_static_string_list))
+
 
 def decode_and_validate(binary_string: bytes, addr: int, min_length: int) -> Iterable[StaticString]:
     try:

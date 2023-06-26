@@ -540,33 +540,11 @@ def main(argv=None) -> int:
 
     static_strings = get_static_strings(sample, args.min_length)
 
-    language = identify_language(sample=sample, static_strings=static_strings)
+    language, language_version = identify_language(sample=sample, static_strings=static_strings)
 
     if language == Language.GO:
         enhancedStaticStrings = extract_go_strings(sample=sample, min_length=args.min_length)
         enhancedStaticStrings = list(enhancedStaticStrings)
-
-        # Calculate String Coverage
-
-        all_static_string_list = []
-
-        for string_obj in static_strings:
-            all_static_string_list.append(string_obj.string)
-
-        extracted_strings = []
-        total_chars_covered = 0
-
-        for j in enhancedStaticStrings:
-            k = j.string
-            for string in all_static_string_list:
-                if k in string:
-                    extracted_strings.append(string)
-                    total_chars_covered += len(string)
-                    break
-
-        ct = len(extracted_strings)  # Count of extracted strings
-
-        logger.info("Percentage of strings extracted: " + str((ct) * 100 / len(all_static_string_list)) + "%")
 
         interim = time()
 
@@ -579,7 +557,10 @@ def main(argv=None) -> int:
 
         results = ResultDocument(metadata=Metadata(file_path=sample, min_length=args.min_length), analysis=analysis)
 
-        results.strings.static_strings = enhancedStaticStrings
+        results.strings.static_strings = static_strings
+        results.strings.enhanced_static_strings = enhancedStaticStrings
+        results.metadata.language_version = language_version
+
 
         results.metadata.runtime.total = get_runtime_diff(time0)
         logger.info("finished execution after %.2f seconds", results.metadata.runtime.total)
@@ -587,7 +568,7 @@ def main(argv=None) -> int:
         if args.json:
             r = floss.render.json.render(results)
         else:
-            r = floss.render.default.render(results, args.verbose, args.quiet, args.color, language=language)
+            r = floss.render.default.render(results, args.verbose, args.quiet, args.color, language)
 
         print(r)
         return 0
