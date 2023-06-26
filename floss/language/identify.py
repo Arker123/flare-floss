@@ -20,7 +20,7 @@ class Language(Enum):
     UNKNOWN = "unknown"
 
 
-def identify_language(sample: str, static_strings: Iterable[StaticString]) -> Language:
+def identify_language(sample: str, static_strings: Iterable[StaticString]) -> tuple[Language, str]:
     """
     Identify the language of the binary given
     """
@@ -35,24 +35,24 @@ def identify_language(sample: str, static_strings: Iterable[StaticString]) -> La
         pe = pefile.PE(sample)
     except pefile.PEFormatError as err:
         logger.debug(f"NOT valid PE header: {err}")
-        return Language.UNKNOWN, None
+        return Language.UNKNOWN, ""
 
     is_go, version = is_go_bin(pe)
-    
+
     if is_go:
         logger.warning("Go: Proceeding with analysis may take a long time.")
         return Language.GO, version
-    
+
     is_dotnet, version = is_dotnet_bin(pe)
     if is_dotnet:
         logger.warning(".net Binary Detected, .net binaries are not supported yet. Results may be inaccurate.")
         logger.warning(".net: Deobfuscation of strings from .net binaries is not supported yet.")
         return Language.DOTNET, version
     else:
-        return Language.UNKNOWN, None
+        return Language.UNKNOWN, ""
 
 
-def is_rust_bin(static_strings: Iterable[StaticString]) -> bool:
+def is_rust_bin(static_strings: Iterable[StaticString]) -> tuple[bool, str]:
     """
     Check if the binary given is compiled with Rust compiler or not
     reference: https://github.com/mandiant/flare-floss/issues/766
@@ -77,10 +77,10 @@ def is_rust_bin(static_strings: Iterable[StaticString]) -> bool:
             logger.warning("Rust Binary found with version: %s", string)
             return (True, string)
 
-    return (False, None)
+    return (False, "")
 
 
-def is_go_bin(pe: pefile.PE) -> bool:
+def is_go_bin(pe: pefile.PE) -> tuple[bool, str]:
     """
     Check if the binary given is compiled with Go compiler or not
     it checks the magic header of the pclntab structure -pcHeader-
@@ -125,7 +125,7 @@ def is_go_bin(pe: pefile.PE) -> bool:
                     # just for testing
                     logger.warning("Go binary found with version %s", get_go_version(magic))
                     return (True, get_go_version(magic))
-    return (False, None)
+    return (False, "")
 
 
 def get_go_version(magic):
@@ -162,7 +162,7 @@ def verify_pclntab(section, pclntab_va: int) -> bool:
     return True if pc_quanum in {1, 2, 4} and pointer_size in {4, 8} else False
 
 
-def is_dotnet_bin(pe: pefile.PE) -> bool:
+def is_dotnet_bin(pe: pefile.PE) -> tuple[bool, str]:
     """
     Check if the binary is .net or not
     Checks the IMAGE_DIRECTORY_ENTRY_COM_DESCRIPTOR entry in the OPTIONAL_HEADER of the file.
@@ -172,7 +172,7 @@ def is_dotnet_bin(pe: pefile.PE) -> bool:
         directory_index = pefile.DIRECTORY_ENTRY["IMAGE_DIRECTORY_ENTRY_COM_DESCRIPTOR"]
         dir_entry = pe.OPTIONAL_HEADER.DATA_DIRECTORY[directory_index]
     except IndexError:
-        return (False, None)
+        return (False, "")
 
     # TODO: Include analysis for .NET version
-    return (dir_entry.Size != 0 and dir_entry.VirtualAddress != 0, 0)
+    return (dir_entry.Size != 0 and dir_entry.VirtualAddress != 0, "")

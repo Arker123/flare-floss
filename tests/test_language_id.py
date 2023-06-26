@@ -24,6 +24,6 @@ def test_language_detection(binary_file, expected_result):
 
     static_strings = get_static_strings(abs_path, 4)
 
-    language = identify_language(abs_path, static_strings)
+    language, version = identify_language(abs_path, static_strings)
     # Check the expected result
     assert language == expected_result, f"Expected: {expected_result.value}, Actual: {language.value}"

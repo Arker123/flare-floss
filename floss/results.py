@@ -173,7 +173,7 @@ class Metadata:
     imagebase: int = 0
     min_length: int = 0
     runtime: Runtime = field(default_factory=Runtime)
-    language_version: str = None
+    language_version: str = ""
 
 
 @dataclass

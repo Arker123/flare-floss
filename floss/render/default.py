@@ -10,13 +10,13 @@ from rich import box
 from rich.table import Table
 from rich.markup import escape
 from rich.console import Console
-from floss.language.identify import Language
 
 import floss.utils as util
 import floss.logging_
 from floss.render import Verbosity
 from floss.results import AddressType, StackString, TightString, DecodedString, ResultDocument, StringEncoding
 from floss.render.sanitize import sanitize
+from floss.language.identify import Language
 from floss.language.go.extract import calculate_coverage
 
 MIN_WIDTH_LEFT_COL = 22
@@ -67,9 +67,14 @@ def render_meta(results: ResultDocument, console, verbose, language):
 
         if language == Language.GO:
             rows.append(("language", "GO"))
-            rows.append(("  version", results.metadata.language_version))   
+            rows.append(("  version", results.metadata.language_version))
             # Display percentage of strings extracted
-            rows.append(("  coverage", calculate_coverage(results.strings.enhanced_static_strings, results.strings.static_strings)))
+            rows.append(
+                (
+                    "  coverage",
+                    str(calculate_coverage(results.strings.enhanced_static_strings, results.strings.static_strings)),
+                )
+            )
 
     table = Table(box=box.ASCII2, show_header=False)
     for row in rows:

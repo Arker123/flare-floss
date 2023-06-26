@@ -561,7 +561,6 @@ def main(argv=None) -> int:
         results.strings.enhanced_static_strings = enhancedStaticStrings
         results.metadata.language_version = language_version
 
-
         results.metadata.runtime.total = get_runtime_diff(time0)
         logger.info("finished execution after %.2f seconds", results.metadata.runtime.total)
 
