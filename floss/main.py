@@ -551,22 +551,23 @@ def main(argv=None) -> int:
         all_static_string_list = []
 
         for string_obj in static_strings:
-            if string_obj.string.isprintable():
-                all_static_string_list.append(string_obj.string)
+            all_static_string_list.append(string_obj.string)
 
-        ct = 0
-                
-        for string in all_static_string_list:
-            found = False
-            for j in enhancedStaticStrings:
-                k = j.string
+
+        extracted_strings = []
+        total_chars_covered = 0  
+
+        for j in enhancedStaticStrings:
+            k = j.string
+            for string in all_static_string_list:
                 if k in string:
-                    found = True
+                    extracted_strings.append(string)
+                    total_chars_covered += len(string)
                     break
-            if (not found) and (len(string) >= args.min_length):
-                ct += 1
 
-        logger.info("Percentage of strings extracted: " + str(100 - ((ct) * 100 / len(all_static_string_list))) + "%")
+        ct = len(extracted_strings)  # Count of extracted strings
+
+        logger.info("Percentage of strings extracted: " + str((ct) * 100 / len(all_static_string_list)) + "%")
 
         interim = time()
 

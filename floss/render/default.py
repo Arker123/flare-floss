@@ -143,32 +143,37 @@ def render_static_substrings(strings, encoding, offset_len, console, verbose, di
     console.print("\n")
 
 
-def render_staticstrings(strings, console, verbose, disable_headers, language):
+def render_staticstrings(strings, console, verbose, disable_headers):
     render_heading("FLOSS STATIC STRINGS", len(strings), console, verbose, disable_headers)
-    if language == Language.GO:
-        strings = sorted(strings, key=lambda s: s.offset)
-        unicode8_strings = list(filter(lambda s: s.encoding == StringEncoding.UTF8, strings))
-        unicode8_offset_len = 0
 
-        if unicode8_strings:
-            unicode8_offset_len = len(f"{unicode8_strings[-1].offset}")
-        offset_len = unicode8_offset_len
+    ascii_strings = list(filter(lambda s: s.encoding == StringEncoding.ASCII, strings))
+    unicode_strings = list(filter(lambda s: s.encoding == StringEncoding.UTF16LE, strings))
 
-        render_static_substrings(unicode8_strings, "UTF-8", offset_len, console, verbose, disable_headers)
-    else:
-        ascii_strings = list(filter(lambda s: s.encoding == StringEncoding.ASCII, strings))
-        unicode_strings = list(filter(lambda s: s.encoding == StringEncoding.UTF16LE, strings))
+    ascii_offset_len = 0
+    unicode_offset_len = 0
+    if ascii_strings:
+        ascii_offset_len = len(f"{ascii_strings[-1].offset}")
+    if unicode_strings:
+        unicode_offset_len = len(f"{unicode_strings[-1].offset}")
+    offset_len = max(ascii_offset_len, unicode_offset_len)
 
-        ascii_offset_len = 0
-        unicode_offset_len = 0
-        if ascii_strings:
-            ascii_offset_len = len(f"{ascii_strings[-1].offset}")
-        if unicode_strings:
-            unicode_offset_len = len(f"{unicode_strings[-1].offset}")
-        offset_len = max(ascii_offset_len, unicode_offset_len)
+    render_static_substrings(ascii_strings, "ASCII", offset_len, console, verbose, disable_headers)
+    render_static_substrings(unicode_strings, "UTF-16LE", offset_len, console, verbose, disable_headers)
 
-        render_static_substrings(ascii_strings, "ASCII", offset_len, console, verbose, disable_headers)
-        render_static_substrings(unicode_strings, "UTF-16LE", offset_len, console, verbose, disable_headers)
+
+def render_go_staticstrings(strings, console, verbose, disable_headers):
+    render_heading("FLOSS STATIC STRINGS", len(strings), console, verbose, disable_headers)
+
+    strings = sorted(strings, key=lambda s: s.offset)
+    unicode8_strings = list(filter(lambda s: s.encoding == StringEncoding.UTF8, strings))
+    unicode8_offset_len = 0
+
+    if unicode8_strings:
+        unicode8_offset_len = len(f"{unicode8_strings[-1].offset}")
+    offset_len = unicode8_offset_len
+
+    render_static_substrings(unicode8_strings, "UTF-8", offset_len, console, verbose, disable_headers)
+
 
 
 def render_stackstrings(
@@ -299,7 +304,12 @@ def render(results, verbose, disable_headers, color, language = None):
         console.print("\n")
 
     if results.analysis.enable_static_strings:
-        render_staticstrings(results.strings.static_strings, console, verbose, disable_headers, language)
+        if language == Language.GO:
+            render_go_staticstrings(results.strings.static_strings, console, verbose, disable_headers)
+        else:
+            render_staticstrings(results.strings.static_strings, console, verbose, disable_headers)
+
+        
         console.print("\n")
 
     if results.analysis.enable_stack_strings:
