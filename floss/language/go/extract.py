@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 MIN_STR_LEN = 6
 
 
-def calculate_coverage(enhancedStaticStrings: List[StaticString], static_strings: List[StaticString]) -> float:
+def calculate_coverage(enhanced_static_strings: List[StaticString], static_strings: List[StaticString]) -> float:
     all_static_string_list = []
 
     for string_obj in static_strings:
@@ -27,17 +27,37 @@ def calculate_coverage(enhancedStaticStrings: List[StaticString], static_strings
     extracted_strings = []
     total_chars_covered = 0
 
-    for j in enhancedStaticStrings:
+    for j in enhanced_static_strings:
         k = j.string
-        for string in all_static_string_list:
-            if k in string:
-                extracted_strings.append(string)
-                total_chars_covered += len(string)
+        for string_obj in static_strings:
+            if k in string_obj.string:
+                extracted_strings.append(string_obj.string)
+                total_chars_covered += len(string_obj.string)
                 break
 
     ct = len(extracted_strings)
 
-    return (ct) * 100 / len(all_static_string_list)
+    return (ct) * 100 / len(all_static_string_list) 
+
+def get_not_extracted_strings(enhanced_static_strings: List[StaticString], static_strings: List[StaticString]) -> float:
+    all_static_string_list = []
+
+    for string_obj in static_strings:
+        all_static_string_list.append(string_obj.string)
+
+    # Identify the strings not extracted by floss
+    not_extracted_strings = []
+
+    for j in static_strings:
+        k = j.string
+        for string_obj in enhanced_static_strings:
+            if k in string_obj.string or string_obj.string in k:
+                break
+        else:
+            not_extracted_strings.append(j)
+
+
+    return not_extracted_strings
 
 
 def decode_and_validate(binary_string: bytes, addr: int, min_length: int) -> Iterable[StaticString]:

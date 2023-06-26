@@ -17,7 +17,7 @@ from floss.render import Verbosity
 from floss.results import AddressType, StackString, TightString, DecodedString, ResultDocument, StringEncoding
 from floss.render.sanitize import sanitize
 from floss.language.identify import Language
-from floss.language.go.extract import calculate_coverage
+from floss.language.go.extract import calculate_coverage, get_not_extracted_strings
 
 MIN_WIDTH_LEFT_COL = 22
 MIN_WIDTH_RIGHT_COL = 82
@@ -66,13 +66,13 @@ def render_meta(results: ResultDocument, console, verbose, language):
         rows.extend(render_function_analysis_rows(results))
 
         if language == Language.GO:
+            coverage = calculate_coverage(results.strings.enhanced_static_strings, results.strings.static_strings)
             rows.append(("language", "GO"))
             rows.append(("  version", results.metadata.language_version))
-            # Display percentage of strings extracted
             rows.append(
                 (
                     "  coverage",
-                    str(calculate_coverage(results.strings.enhanced_static_strings, results.strings.static_strings)),
+                    f"{coverage:.2f}%",
                 )
             )
 
@@ -173,18 +173,35 @@ def render_staticstrings(strings, console, verbose, disable_headers):
     render_static_substrings(unicode_strings, "UTF-16LE", offset_len, console, verbose, disable_headers)
 
 
-def render_go_staticstrings(strings, console, verbose, disable_headers):
+def render_go_staticstrings(strings, not_extracted_strings, console, verbose, disable_headers):
+
     render_heading("FLOSS STATIC STRINGS", len(strings), console, verbose, disable_headers)
 
+    strings = list(set(strings))
     strings = sorted(strings, key=lambda s: s.offset)
     unicode8_strings = list(filter(lambda s: s.encoding == StringEncoding.UTF8, strings))
     unicode8_offset_len = 0
 
+    # filter out duplicate based on offset
+    
+
     if unicode8_strings:
         unicode8_offset_len = len(f"{unicode8_strings[-1].offset}")
-    offset_len = unicode8_offset_len
+    
+
+    not_extracted_strings_offset_len = 0
+    if verbose > Verbosity.DEFAULT:
+        not_extracted_strings = sorted(not_extracted_strings, key=lambda s: s.offset)
+        not_extracted_strings = list(filter(lambda s: s.encoding == StringEncoding.ASCII, not_extracted_strings))
+
+        if not_extracted_strings:
+            not_extracted_strings_offset_len = len(f"{not_extracted_strings[-1].offset}")
+
+    offset_len = max(not_extracted_strings_offset_len, unicode8_offset_len)
 
     render_static_substrings(unicode8_strings, "UTF-8", offset_len, console, verbose, disable_headers)
+    if verbose > Verbosity.DEFAULT:
+        render_static_substrings(not_extracted_strings, "MISSED STRINGS", offset_len, console, verbose, disable_headers)
 
 
 def render_stackstrings(
@@ -316,7 +333,8 @@ def render(results, verbose, disable_headers, color, language=None):
 
     if results.analysis.enable_static_strings:
         if language == Language.GO:
-            render_go_staticstrings(results.strings.enhanced_static_strings, console, verbose, disable_headers)
+            not_extracted_strings = get_not_extracted_strings(results.strings.enhanced_static_strings, results.strings.static_strings)
+            render_go_staticstrings(results.strings.enhanced_static_strings, not_extracted_strings, console, verbose, disable_headers)
         else:
             render_staticstrings(results.strings.static_strings, console, verbose, disable_headers)
 
