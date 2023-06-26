@@ -553,9 +553,8 @@ def main(argv=None) -> int:
         for string_obj in static_strings:
             all_static_string_list.append(string_obj.string)
 
-
         extracted_strings = []
-        total_chars_covered = 0  
+        total_chars_covered = 0
 
         for j in enhancedStaticStrings:
             k = j.string
@@ -594,8 +593,6 @@ def main(argv=None) -> int:
         return 0
 
     results = ResultDocument(metadata=Metadata(file_path=sample, min_length=args.min_length), analysis=analysis)
-
-
 
     # in order of expected run time, fast to slow
     # 1. static strings

@@ -175,7 +175,6 @@ def render_go_staticstrings(strings, console, verbose, disable_headers):
     render_static_substrings(unicode8_strings, "UTF-8", offset_len, console, verbose, disable_headers)
 
 
-
 def render_stackstrings(
     strings: Union[List[StackString], List[TightString]], console, verbose: bool, disable_headers: bool
 ):
@@ -289,7 +288,7 @@ def get_color(color):
     return color_system
 
 
-def render(results, verbose, disable_headers, color, language = None):
+def render(results, verbose, disable_headers, color, language=None):
     sys.__stdout__.reconfigure(encoding="utf-8")
     console = Console(file=io.StringIO(), color_system=get_color(color), highlight=False)
 
@@ -309,7 +308,6 @@ def render(results, verbose, disable_headers, color, language = None):
         else:
             render_staticstrings(results.strings.static_strings, console, verbose, disable_headers)
 
-        
         console.print("\n")
 
     if results.analysis.enable_stack_strings:
