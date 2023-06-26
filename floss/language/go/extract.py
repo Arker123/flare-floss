@@ -37,9 +37,12 @@ def calculate_coverage(enhanced_static_strings: List[StaticString], static_strin
 
     ct = len(extracted_strings)
 
-    return (ct) * 100 / len(all_static_string_list) 
+    return (ct) * 100 / len(all_static_string_list)
 
-def get_not_extracted_strings(enhanced_static_strings: List[StaticString], static_strings: List[StaticString]) -> float:
+
+def get_not_extracted_strings(
+    enhanced_static_strings: List[StaticString], static_strings: List[StaticString]
+) -> List[StaticString]:
     all_static_string_list = []
 
     for string_obj in static_strings:
@@ -55,7 +58,6 @@ def get_not_extracted_strings(enhanced_static_strings: List[StaticString], stati
                 break
         else:
             not_extracted_strings.append(j)
-
 
     return not_extracted_strings
 

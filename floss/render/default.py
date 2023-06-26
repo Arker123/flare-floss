@@ -174,7 +174,6 @@ def render_staticstrings(strings, console, verbose, disable_headers):
 
 
 def render_go_staticstrings(strings, not_extracted_strings, console, verbose, disable_headers):
-
     render_heading("FLOSS STATIC STRINGS", len(strings), console, verbose, disable_headers)
 
     strings = list(set(strings))
@@ -183,11 +182,9 @@ def render_go_staticstrings(strings, not_extracted_strings, console, verbose, di
     unicode8_offset_len = 0
 
     # filter out duplicate based on offset
-    
 
     if unicode8_strings:
         unicode8_offset_len = len(f"{unicode8_strings[-1].offset}")
-    
 
     not_extracted_strings_offset_len = 0
     if verbose > Verbosity.DEFAULT:
@@ -333,8 +330,12 @@ def render(results, verbose, disable_headers, color, language=None):
 
     if results.analysis.enable_static_strings:
         if language == Language.GO:
-            not_extracted_strings = get_not_extracted_strings(results.strings.enhanced_static_strings, results.strings.static_strings)
-            render_go_staticstrings(results.strings.enhanced_static_strings, not_extracted_strings, console, verbose, disable_headers)
+            not_extracted_strings = get_not_extracted_strings(
+                results.strings.enhanced_static_strings, results.strings.static_strings
+            )
+            render_go_staticstrings(
+                results.strings.enhanced_static_strings, not_extracted_strings, console, verbose, disable_headers
+            )
         else:
             render_staticstrings(results.strings.static_strings, console, verbose, disable_headers)
 
