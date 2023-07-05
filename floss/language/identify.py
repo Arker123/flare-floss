@@ -3,6 +3,7 @@
 import re
 from enum import Enum
 from typing import Iterable
+from pathlib import Path
 
 import pefile
 
@@ -20,7 +21,7 @@ class Language(Enum):
     UNKNOWN = "unknown"
 
 
-def identify_language(sample: str, static_strings: Iterable[StaticString]) -> tuple[Language, str]:
+def identify_language(sample: Path, static_strings: Iterable[StaticString]) -> Language:
     """
     Identify the language of the binary given
     """
@@ -32,7 +33,7 @@ def identify_language(sample: str, static_strings: Iterable[StaticString]) -> tu
 
     # Open the file as PE for further checks
     try:
-        pe = pefile.PE(sample)
+        pe = pefile.PE(str(sample))
     except pefile.PEFormatError as err:
         logger.debug(f"NOT valid PE header: {err}")
         return Language.UNKNOWN, ""

@@ -4,6 +4,7 @@ import json
 import datetime
 from enum import Enum
 from typing import Dict, List
+from pathlib import Path
 from dataclasses import field
 
 # we use pydantic for dataclasses so that we can
@@ -131,6 +132,19 @@ class StaticString:
     offset: int
     encoding: StringEncoding
 
+    @classmethod
+    def from_utf8(cls, buf, addr, min_length):
+        try:
+            decoded_string = buf.decode("utf-8")
+        except UnicodeDecodeError:
+            raise ValueError("not utf-8")
+
+        if not decoded_string.isprintable():
+            raise ValueError("not printable")
+        if len(decoded_string) < min_length:
+            raise ValueError("too short")
+        return cls(string=decoded_string, offset=addr, encoding=StringEncoding.UTF8)
+
 
 @dataclass
 class Runtime:
@@ -222,8 +236,8 @@ def log_result(decoded_string, verbosity):
             ValueError("unknown decoded or extracted string type: %s", type(decoded_string))
 
 
-def load(sample: str, analysis: Analysis, functions: List[int], min_length: int) -> ResultDocument:
-    logger.debug("loading results document: %s", sample)
+def load(sample: Path, analysis: Analysis, functions: List[int], min_length: int) -> ResultDocument:
+    logger.debug("loading results document: %s", str(sample))
     results = read(sample)
     results.metadata.file_path = f"{sample}\n{results.metadata.file_path}"
     check_set_string_types(results, analysis)
@@ -235,9 +249,9 @@ def load(sample: str, analysis: Analysis, functions: List[int], min_length: int)
     return results
 
 
-def read(sample: str) -> ResultDocument:
+def read(sample: Path) -> ResultDocument:
     try:
-        with open(sample, "rb") as f:
+        with sample.open("rb") as f:
             results = json.loads(f.read().decode("utf-8"))
     except (json.decoder.JSONDecodeError, UnicodeDecodeError) as e:
         raise InvalidResultsFile(f"{e}")
@@ -245,7 +259,7 @@ def read(sample: str) -> ResultDocument:
     try:
         results = ResultDocument(**results)
     except (TypeError, ValidationError) as e:
-        raise InvalidResultsFile(f"{sample} is not a valid FLOSS result document: {e}")
+        raise InvalidResultsFile(f"{str(sample)} is not a valid FLOSS result document: {e}")
 
     return results
 
