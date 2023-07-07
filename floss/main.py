@@ -14,17 +14,18 @@ from pathlib import Path
 import halo
 import pefile
 import viv_utils
+import rich.traceback
+import viv_utils.flirt
+from vivisect import VivWorkspace
+
 import floss.utils
 import floss.results
 import floss.version
 import floss.logging_
-import rich.traceback
-import viv_utils.flirt
 import floss.render.json
 import floss.render.default
 import floss.language.go.extract
 import floss.language.go.coverage
-from vivisect import VivWorkspace
 from floss.const import MEGABYTE, MAX_FILE_SIZE, MIN_STRING_LENGTH, SUPPORTED_FILE_MAGIC
 from floss.utils import (
     hex,

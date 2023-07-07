@@ -9,6 +9,7 @@ from typing import List
 
 import pefile
 import tabulate
+
 from floss.utils import get_static_strings
 from floss.results import StaticString, StringEncoding
 from floss.render.sanitize import sanitize
@@ -287,11 +288,7 @@ def get_missed_strings(all_ss_strings: List[StaticString], go_strings, min_len):
 
         found = False
         for gs in go_strings:
-            if (
-                gs.string
-                and gs.string in s.string
-                and s.offset <= gs.offset <= s.offset + orig_len
-            ):
+            if gs.string and gs.string in s.string and s.offset <= gs.offset <= s.offset + orig_len:
                 found = True
                 len_gostr += len(gs.string)
 
