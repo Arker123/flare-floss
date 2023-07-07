@@ -251,7 +251,7 @@ def get_struct_string_candidates_with_pointer_size(pe: pefile.PE, buf: bytes, ps
     and the length is reasonable; however, we don't validate the encoded string data.
     """
     if psize == 32:
-        format = "L"
+        format = "I"
     elif psize == 64:
         format = "Q"
     else:
@@ -325,7 +325,7 @@ def get_struct_string_candidates(pe: pefile.PE) -> Iterable[StructString]:
         if not section.IMAGE_SCN_MEM_READ:
             continue
 
-        if not section.Name.startswith(b".rdata\x00") or section.Name.startswith(b".data\x00"):
+        if not (section.Name.startswith(b".rdata\x00") or section.Name.startswith(b".data\x00")):
             # by convention, the struct String instances are stored in the .rdata or .data section.
             continue
 
