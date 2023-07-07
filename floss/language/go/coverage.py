@@ -178,7 +178,7 @@ def get_extract_stats(pe, all_ss_strings: List[StaticString], go_strings, min_le
                 gs_found.append(gs)
 
                 if replaced_len < min_len:
-                    results.append((secname, s_id, s_range, "", "missing", s, orig_len - replaced_len, gs))
+                    results.append((secname, s_id, s_range, False, "missing", s, orig_len - replaced_len, gs))
                     break
 
         if not found:
@@ -249,9 +249,11 @@ def get_extract_stats(pe, all_ss_strings: List[StaticString], go_strings, min_le
             )
         )
 
+    rows = sorted(rows, key=lambda t: t[3])
+
     print(
         tabulate.tabulate(
-            sorted(rows, key=lambda t: t[3]),
+            rows,
             headers=[
                 "section",
                 "id",

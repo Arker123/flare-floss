@@ -324,8 +324,8 @@ def get_struct_string_candidates(pe: pefile.PE) -> Iterable[StructString]:
         if not section.IMAGE_SCN_MEM_READ:
             continue
 
-        if not section.Name.startswith(b".rdata\x00"):
-            # by convention, the struct String instances are stored in the .rdata section.
+        if not section.Name.startswith(b".rdata\x00") or section.Name.startswith(b".data\x00"):
+            # by convention, the struct String instances are stored in the .rdata or .data section.
             continue
 
         data = section.get_data()
@@ -523,7 +523,19 @@ def find_string_blob_range(pe: pefile.PE, struct_strings: List[StructString]) ->
     return blob_start, blob_end
 
 
-def get_string_blob_strings(pe: pefile.PE, min_length) -> Iterable[Tuple[VA, str]]:
+def get_rdata_file_offset(pe: pefile.PE, addr) -> int:
+    """
+    get the file offset of the .rdata section.
+    """
+    for section in pe.sections:
+        if section.Name.startswith(b".rdata\x00"):
+            image_base = pe.OPTIONAL_HEADER.ImageBase
+            virtual_address = section.VirtualAddress
+            pointer_to_raw_data = section.PointerToRawData
+    return addr - (image_base + virtual_address - pointer_to_raw_data)
+
+
+def get_string_blob_strings(pe: pefile.PE, min_length) -> Iterable[StaticString]:
     """
     for the given PE file compiled by Go,
     find the string blob and then extract strings from it.
@@ -604,7 +616,7 @@ def get_string_blob_strings(pe: pefile.PE, min_length) -> Iterable[Tuple[VA, str
                 logger.warn("probably missed a string blob string ending at: 0x%x", start - 1)
 
             try:
-                string = StaticString.from_utf8(sbuf, start, min_length)
+                string = StaticString.from_utf8(sbuf, get_rdata_file_offset(pe, start), min_length)
                 yield string
             except ValueError:
                 pass
@@ -645,14 +657,12 @@ def extract_go_strings(sample, min_length) -> List[StaticString]:
     buf = p.read_bytes()
     pe = pefile.PE(data=buf, fast_load=True)
 
-    go_strings = []
+    go_strings = list()  # type: List[StaticString]
     go_strings.extend(get_string_blob_strings(pe, min_length))
     go_strings.extend(get_stackstrings(pe, min_length))
     go_strings.extend(floss.utils.get_static_strings(p, min_length))
 
     return go_strings
-
-    # return list(get_string_blob_strings(pe, min_length) + get_stackstrings(pe, min_length) + floss.utils.get_static_strings(p, min_length))
 
 
 def main(argv=None):
@@ -668,11 +678,11 @@ def main(argv=None):
     )
     args = parser.parse_args(args=argv)
 
-    logging.basicConfig(level=logging.TRACE)
+    logging.basicConfig(level=logging.DEBUG)
 
     go_strings = sorted(extract_go_strings(args.path, args.min_length), key=lambda s: s.offset)
     for string in go_strings:
-        print(string.string)
+        print(f"{string.offset:#x}: {string.string}")
 
 
 if __name__ == "__main__":
