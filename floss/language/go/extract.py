@@ -26,6 +26,9 @@ MIN_STR_LEN = 4
 def find_stack_strings_with_regex(
     extract_stackstring_pattern, section_data, offset, min_length
 ) -> Iterable[StaticString]:
+    """
+    Find stack strings using a regex pattern.
+    """
     for m in extract_stackstring_pattern.finditer(section_data):
         for i in range(1, 8):
             try:
@@ -48,6 +51,9 @@ def find_stack_strings_with_regex(
 
 def find_amd64_stackstrings(section_data, offset, min_length):
     """
+    Stackstrings in amd64 architecture are found
+    by searching for the following pattern:
+
     .text:000000000048FFA9 48 83 FB 0F                                   cmp     rbx, 0Fh
     .text:000000000048FFAD 75 69                                         jnz     short loc_490018
     .text:000000000048FFAF 48 BA 50 61 73 73 77 6F 72 64                 mov     rdx, 64726F7773736150h
@@ -69,6 +75,9 @@ def find_amd64_stackstrings(section_data, offset, min_length):
 
 def find_i386_stackstrings(section_data, offset, min_length):
     """
+    Stackstrings in i386 architecture are found
+    by searching for the following pattern:
+
     .text:0048CED3 75 6D                                         jnz     short loc_48CF42
     .text:0048CED5 81 7D 00 50 61 73 73                          cmp     dword ptr [ebp+0], 73736150h
     .text:0048CEDC 75 64                                         jnz     short loc_48CF42
