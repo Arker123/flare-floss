@@ -7,12 +7,13 @@ import struct
 import logging
 import pathlib
 import argparse
-from typing import List, Tuple, Iterable, Optional, TypeAlias
+from typing import List, Tuple, Iterable, Optional
 from pathlib import Path
 from itertools import chain
 from dataclasses import dataclass
 
 import pefile
+from typing_extensions import TypeAlias
 
 import floss.utils
 from floss.results import StaticString, StringEncoding
