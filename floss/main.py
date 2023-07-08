@@ -554,7 +554,7 @@ def main(argv=None) -> int:
             analysis.enable_decoded_strings = False
 
     elif language == language.DOTNET:
-        logger.warning(".NET language-specific .NET string extraction is not supported.")
+        logger.warning(".NET language-specific string extraction is not supported.")
         logger.warning("Will NOT deobfuscate any .NET strings.")
 
         results.metadata.language = language.DOTNET.value
