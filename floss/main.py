@@ -575,7 +575,7 @@ def main(argv=None) -> int:
 
         if language:
             if language == language.GO:
-                logger.warning("Applying language-specific Go string extraction.")
+                logger.info("Applying language-specific Go string extraction.")
 
                 results.strings.language_strings = floss.language.go.extract.extract_go_strings(sample, args.min_length)
                 results.strings.language_strings_missed = list(
