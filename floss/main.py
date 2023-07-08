@@ -539,19 +539,20 @@ def main(argv=None) -> int:
     if language == language.GO:
         results.metadata.language = language.GO.value
 
-        prompt = input("Do you want to enable string deobfuscation? (this could take a long time) [y/N] ")
+        if args.enabled_types == [] and args.disabled_types == []:
+            prompt = input("Do you want to enable string deobfuscation? (this could take a long time) [y/N] ")
 
-        if prompt == "y" or prompt == "Y":
-            logger.info("enabling string deobfuscation...")
-            analysis.enable_stack_strings = True
-            analysis.enable_tight_strings = True
-            analysis.enable_decoded_strings = True
+            if prompt == "y" or prompt == "Y":
+                logger.info("enabling string deobfuscation...")
+                analysis.enable_stack_strings = True
+                analysis.enable_tight_strings = True
+                analysis.enable_decoded_strings = True
 
-        else:
-            logger.info("disabling string deobfuscation...")
-            analysis.enable_stack_strings = False
-            analysis.enable_tight_strings = False
-            analysis.enable_decoded_strings = False
+            else:
+                logger.info("disabling string deobfuscation...")
+                analysis.enable_stack_strings = False
+                analysis.enable_tight_strings = False
+                analysis.enable_decoded_strings = False
 
     elif language == language.DOTNET:
         logger.warning(".NET language-specific string extraction is not supported.")
