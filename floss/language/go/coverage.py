@@ -195,7 +195,7 @@ def get_extract_stats(pe, all_ss_strings: List[StaticString], go_strings, min_le
         if gs in gs_found:
             continue
 
-        gsdata = gs.string  # if gs.string else ''
+        gsdata = gs.string
         if len(gs.string) >= 50:
             gsdata = gs.string[:36] + "...." + gs.string[-10:]
         gsdata = sanitize(gsdata)
