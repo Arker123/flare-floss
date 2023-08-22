@@ -4,13 +4,13 @@ import sys
 import logging
 import pathlib
 import argparse
-from typing import List, Tuple, Iterable, Optional
+from typing import List, Tuple
 
 import pefile
 import binary2strings as b2s
 from typing_extensions import TypeAlias
 
-from floss.results import StaticString, StringEncoding
+from floss.results import StaticString
 from floss.language.utils import find_lea_xrefs, get_struct_string_candidates
 
 logger = logging.getLogger(__name__)
@@ -20,21 +20,12 @@ MIN_STR_LEN = 4
 VA: TypeAlias = int
 
 
-def get_rdata_section_info(pe: pefile.PE) -> pefile.SectionStructure:
-    """
-    Retrieve info about .rdata section
-    """
-    rdata_structure = None
-
+def get_rdata_section(pe: pefile.PE) -> pefile.SectionStructure:
     for section in pe.sections:
         if section.Name.startswith(b".rdata\x00"):
-            rdata_structure = section
-            break
-    else:
-        logger.error("No .rdata section found")
-        raise ValueError("No .rdata section found")
+            return section
 
-    return rdata_structure
+    raise ValueError("no .rdata section found")
 
 
 def filter_and_transform_utf8_strings(
@@ -95,7 +86,7 @@ def split_string(static_strings: List[StaticString], address: int) -> List[Stati
 
 def extract_rust_strings(sample: pefile.PE, min_length: int) -> List[StaticString]:
     """
-    Extract UTF-8 strings from the given PE file using binary2strings
+    Extract Rust strings from a sample
     """
 
     p = pathlib.Path(sample)
@@ -105,12 +96,9 @@ def extract_rust_strings(sample: pefile.PE, min_length: int) -> List[StaticStrin
     image_base = pe.OPTIONAL_HEADER.ImageBase
 
     try:
-        rdata_section = get_rdata_section_info(pe)
-    except ValueError:
-        return []
-
-    # If .rdata section is not found
-    if rdata_section == None:
+        rdata_section = get_rdata_section(pe)
+    except ValueError as e:
+        logger.error("cannot extract rust strings: %s", e)
         return []
 
     start_rdata = rdata_section.PointerToRawData
